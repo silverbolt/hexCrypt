@@ -2,44 +2,44 @@
 (function () {
   "use strict";
   const JOIN_CHAR = '.'
-  function stringToCCodes(s) {
-    return s.split('').map((char) => char.charCodeAt(0));
-  }
-
-  function saltCharCodes(ccodes, opts = {}) {
+  
+  function saltCodes(codes, opts = {}) {
     const salt = opts.salt || 'Loremipsumdolorsitame'
     const saltLen = salt.length
-    const nums = stringToCCodes(salt);
+    const nums = salt.split('').map((char) => char.charCodeAt(0));
     let sindex = 0
-    for (let i = 0; i < ccodes.length; i++) {
+    for (let i = 0; i < codes.length; i++) {
       if (opts.unSalt) {
-        ccodes[i] = ccodes[i] - nums[sindex];
+        codes[i] = codes[i] - nums[sindex];
       } else {
-        ccodes[i] = ccodes[i] + nums[sindex];
+        codes[i] = codes[i] + nums[sindex];
       }
       sindex = (sindex + 1) % saltLen
     }
-    return ccodes
+    return codes
   }
-  function crypt(str) {
-    return saltCharCodes(stringToCCodes(str)).map(ccode => ccode.toString(16)).join(JOIN_CHAR)
+  
+  function crypt(str, salt) {
+    const codes = str.split('').map((char) => char.charCodeAt(0))
+    const saltedCodes = saltCodes(codes, { salt })
+    return saltedCodes.map(sc => sc.toString(16)).join(JOIN_CHAR)
   }
-  function decrypt(str) {
+  
+  function decrypt(str, salt) {
     if (!str) {
       return str
     }
-    const ccodes = str.split(JOIN_CHAR).map((s) => parseInt(s, 16))
-    const saltedCcodes = saltCharCodes(ccodes, { unSalt: true })
-    return saltedCcodes.map(code => String.fromCharCode(code)).join('')
+    const codes = str.split(JOIN_CHAR).map((s) => parseInt(s, 16))
+    const unsaltedCodes = saltCodes(codes, { unSalt: true, salt })
+    return unsaltedCodes.map(code => String.fromCharCode(code)).join('')
   }
-
 
   const HexCrypt = {
     crypt, decrypt
   }
 
   if (typeof window !== "undefined") {
-    if (!window.StrInterpolation) {
+    if (!window.HexCrypt) {
       window.HexCrypt = HexCrypt;
     }
   } else {
